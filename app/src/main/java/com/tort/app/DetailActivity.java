@@ -2,7 +2,6 @@ package com.tort.app;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.graphics.Color;
 import android.view.Gravity;
 import android.widget.*;
 
@@ -12,9 +11,11 @@ public class DetailActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String cake = getIntent().getStringExtra("cake");
+        String receivedCake = getIntent().getStringExtra("cake");
 
-        if (cake == null) cake = "Торти шоколадӣ";
+        final String cake = receivedCake == null
+                ? "Торти шоколадӣ"
+                : receivedCake;
 
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
@@ -56,13 +57,17 @@ public class DetailActivity extends Activity {
 
         favorite.setOnClickListener(v -> {
             Favorites.add(this, cake);
-            Toast.makeText(this,
-                "Ба дӯстдоштаҳо илова шуд!",
-                Toast.LENGTH_SHORT).show();
+
+            Toast.makeText(
+                    this,
+                    "Ба дӯстдоштаҳо илова шуд!",
+                    Toast.LENGTH_SHORT
+            ).show();
         });
 
         ScrollView scroll = new ScrollView(this);
         scroll.addView(layout);
+
         setContentView(scroll);
     }
 }
