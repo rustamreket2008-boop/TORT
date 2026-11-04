@@ -7,33 +7,25 @@
         android:icon="@drawable/file_0000000070808208be26eecaccbf661d"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
-        <activity
-            android:name=".CategoryActivity"
-            android:exported="false" />
+        <activity android:name=".CategoryActivity" android:exported="false" />
+        <activity android:name=".FavoritesActivity" android:exported="false" />
+        <activity android:name=".DetailActivity" android:exported="false" />
+        <activity android:name=".HomeActivity" android:exported="false" />
 
-        <activity
-            android:name=".FavoritesActivity"
-            android:exported="false" />
+        <activity android:name=".ProductsActivity" android:exported="false" />
+        <activity android:name=".ShoppingListActivity" android:exported="false" />
+        <activity android:name=".CookingTimerActivity" android:exported="false" />
+        <activity android:name=".UnitConverterActivity" android:exported="false" />
+        <activity android:name=".CookingTipsActivity" android:exported="false" />
+        <activity android:name=".CookingPlannerActivity" android:exported="false" />
+        <activity android:name=".AboutActivity" android:exported="false" />
 
-        <activity
-            android:name=".DetailActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".HomeActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
-
+        <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
 
     </application>
-
 </manifest>
