@@ -7,6 +7,10 @@
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
         <activity
+            android:name=".CategoryActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".FavoritesActivity"
             android:exported="false" />
 
