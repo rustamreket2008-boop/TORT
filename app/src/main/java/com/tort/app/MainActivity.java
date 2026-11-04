@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.graphics.Color;
 import android.view.Gravity;
 import android.widget.*;
+import android.content.Intent;
 
 public class MainActivity extends Activity {
 
@@ -19,10 +20,10 @@ public class MainActivity extends Activity {
 
         TextView title = new TextView(this);
         title.setText("🎂 TORT");
-        title.setTextSize(32);
+        title.setTextSize(34);
         title.setTextColor(Color.rgb(220, 70, 130));
         title.setGravity(Gravity.CENTER);
-        title.setPadding(10, 20, 10, 20);
+        title.setPadding(10, 25, 10, 20);
 
         TextView subtitle = new TextView(this);
         subtitle.setText("Ҷаҳони шириниҳо ва пухтупаз");
@@ -33,22 +34,63 @@ public class MainActivity extends Activity {
         main.addView(title);
         main.addView(subtitle);
 
-        String[] menu = {
-            "🎂 Тортҳо",
-            "🧁 Кексҳо",
-            "🍰 Шириниҳо",
-            "🥛 Маҳсулот",
-            "❤️ Дӯстдоштаҳо",
-            "🔍 Ҷустуҷӯи рецепт"
-        };
+        Button cakes = createButton("🎂 Тортҳо");
+        Button cupcakes = createButton("🧁 Кексҳо");
+        Button desserts = createButton("🍰 Шириниҳо");
+        Button products = createButton("🥛 Маҳсулот");
+        Button favorites = createButton("❤️ Дӯстдоштаҳо");
+        Button search = createButton("🔍 Ҷустуҷӯи рецепт");
 
-        for (String item : menu) {
-            Button button = new Button(this);
-            button.setText(item);
-            button.setTextSize(17);
-            main.addView(button);
-        }
+        main.addView(cakes);
+        main.addView(cupcakes);
+        main.addView(desserts);
+        main.addView(products);
+        main.addView(favorites);
+        main.addView(search);
+
+        cakes.setOnClickListener(v -> openHome());
+
+        search.setOnClickListener(v -> openHome());
+
+        favorites.setOnClickListener(v -> {
+            startActivity(new Intent(
+                    MainActivity.this,
+                    FavoritesActivity.class
+            ));
+        });
+
+        cupcakes.setOnClickListener(v ->
+                Toast.makeText(this,
+                        "Бахши кексҳо дар ҳоли омодасозӣ аст",
+                        Toast.LENGTH_SHORT).show()
+        );
+
+        desserts.setOnClickListener(v ->
+                Toast.makeText(this,
+                        "Бахши шириниҳо дар ҳоли омодасозӣ аст",
+                        Toast.LENGTH_SHORT).show()
+        );
+
+        products.setOnClickListener(v ->
+                Toast.makeText(this,
+                        "Бахши маҳсулот дар ҳоли омодасозӣ аст",
+                        Toast.LENGTH_SHORT).show()
+        );
 
         setContentView(main);
+    }
+
+    private Button createButton(String text) {
+        Button button = new Button(this);
+        button.setText(text);
+        button.setTextSize(17);
+        return button;
+    }
+
+    private void openHome() {
+        startActivity(new Intent(
+                MainActivity.this,
+                HomeActivity.class
+        ));
     }
 }
