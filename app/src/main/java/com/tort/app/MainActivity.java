@@ -37,6 +37,7 @@ public class MainActivity extends Activity {
         Button cakes = createButton("🎂 Тортҳо");
         Button cupcakes = createButton("🧁 Кексҳо");
         Button desserts = createButton("🍰 Шириниҳо");
+        Button pastries = createButton("🥐 Қаннодӣ");
         Button products = createButton("🥛 Маҳсулот");
         Button favorites = createButton("❤️ Дӯстдоштаҳо");
         Button search = createButton("🔍 Ҷустуҷӯи рецепт");
@@ -44,38 +45,33 @@ public class MainActivity extends Activity {
         main.addView(cakes);
         main.addView(cupcakes);
         main.addView(desserts);
+        main.addView(pastries);
         main.addView(products);
         main.addView(favorites);
         main.addView(search);
 
         cakes.setOnClickListener(v -> openHome());
-
         search.setOnClickListener(v -> openHome());
 
-        favorites.setOnClickListener(v -> {
-            startActivity(new Intent(
-                    MainActivity.this,
-                    FavoritesActivity.class
-            ));
-        });
-
         cupcakes.setOnClickListener(v ->
-                Toast.makeText(this,
-                        "Бахши кексҳо дар ҳоли омодасозӣ аст",
-                        Toast.LENGTH_SHORT).show()
-        );
+                openCategory("cupcakes"));
 
         desserts.setOnClickListener(v ->
-                Toast.makeText(this,
-                        "Бахши шириниҳо дар ҳоли омодасозӣ аст",
-                        Toast.LENGTH_SHORT).show()
-        );
+                openCategory("desserts"));
+
+        pastries.setOnClickListener(v ->
+                openCategory("pastries"));
+
+        favorites.setOnClickListener(v ->
+                startActivity(new Intent(
+                        MainActivity.this,
+                        FavoritesActivity.class
+                )));
 
         products.setOnClickListener(v ->
                 Toast.makeText(this,
-                        "Бахши маҳсулот дар ҳоли омодасозӣ аст",
-                        Toast.LENGTH_SHORT).show()
-        );
+                        "Бахши маҳсулот баъд илова мешавад",
+                        Toast.LENGTH_SHORT).show());
 
         setContentView(main);
     }
@@ -92,5 +88,15 @@ public class MainActivity extends Activity {
                 MainActivity.this,
                 HomeActivity.class
         ));
+    }
+
+    private void openCategory(String category) {
+        Intent intent = new Intent(
+                MainActivity.this,
+                CategoryActivity.class
+        );
+
+        intent.putExtra("category", category);
+        startActivity(intent);
     }
 }
