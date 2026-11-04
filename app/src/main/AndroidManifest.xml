@@ -4,6 +4,7 @@
     <application
         android:allowBackup="true"
         android:label="TORT"
+        android:icon="@drawable/file_0000000070808208be26eecaccbf661d"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
         <activity
@@ -34,4 +35,5 @@
         </activity>
 
     </application>
+
 </manifest>
