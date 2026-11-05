@@ -2,24 +2,33 @@ package com.tort.app;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.view.Gravity;
 import android.widget.*;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.util.ArrayList;
 
 public class CookingPlannerActivity extends Activity {
+
+    private ArrayList<String> plans = new ArrayList<>();
+    private LinearLayout list;
+    private EditText input;
+    private Spinner daySpinner;
+    private SharedPreferences preferences;
 
     private String[] days = {
         "Душанбе", "Сешанбе", "Чоршанбе",
         "Панҷшанбе", "Ҷумъа", "Шанбе", "Якшанбе"
     };
 
-    private Spinner daySpinner;
-    private EditText foodInput;
-    private LinearLayout plans;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        preferences = getSharedPreferences("TORT_PLANNER", MODE_PRIVATE);
+        loadPlans();
 
         LinearLayout main = new LinearLayout(this);
         main.setOrientation(LinearLayout.VERTICAL);
@@ -35,72 +44,100 @@ public class CookingPlannerActivity extends Activity {
 
         daySpinner = new Spinner(this);
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                days
+            this,
+            android.R.layout.simple_spinner_item,
+            days
         );
         adapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item
+            android.R.layout.simple_spinner_dropdown_item
         );
         daySpinner.setAdapter(adapter);
 
-        foodInput = new EditText(this);
-        foodInput.setHint("Номи ширинӣ ё тортро навис");
+        input = new EditText(this);
+        input.setHint("Номи таом ё тортро навис");
 
-        Button addButton = new Button(this);
-        addButton.setText("➕ Илова кардан");
+        Button add = new Button(this);
+        add.setText("➕ Илова кардани нақша");
 
-        TextView listTitle = new TextView(this);
-        listTitle.setText("Нақшаҳои ман:");
-        listTitle.setTextSize(20);
-        listTitle.setTextColor(Color.rgb(220, 70, 130));
-        listTitle.setPadding(5, 20, 5, 10);
-
-        plans = new LinearLayout(this);
-        plans.setOrientation(LinearLayout.VERTICAL);
+        list = new LinearLayout(this);
+        list.setOrientation(LinearLayout.VERTICAL);
 
         ScrollView scroll = new ScrollView(this);
-        scroll.addView(plans);
+        scroll.addView(list);
 
-        addButton.setOnClickListener(v -> addPlan());
+        add.setOnClickListener(v -> addPlan());
 
         main.addView(title);
         main.addView(daySpinner);
-        main.addView(foodInput);
-        main.addView(addButton);
-        main.addView(listTitle);
+        main.addView(input);
+        main.addView(add);
         main.addView(scroll);
 
         setContentView(main);
+        showPlans();
     }
 
     private void addPlan() {
-        String food = foodInput.getText().toString().trim();
+        String name = input.getText().toString().trim();
 
-        if (food.isEmpty()) {
-            foodInput.setError("Номи шириниро навис");
+        if (name.isEmpty()) {
+            input.setError("Номи таомро навис");
             return;
         }
 
-        TextView item = new TextView(this);
-        item.setText("📅 " +
-                daySpinner.getSelectedItem().toString() +
-                " — " + food + "     ❌");
+        String day = daySpinner.getSelectedItem().toString();
+        plans.add(day + " — " + name);
 
-        item.setTextSize(17);
-        item.setTextColor(Color.DKGRAY);
-        item.setPadding(12, 18, 12, 18);
+        savePlans();
+        input.setText("");
+        showPlans();
 
-        item.setOnClickListener(v -> {
-            plans.removeView(item);
-            Toast.makeText(this, "Нақша нест карда шуд",
-                    Toast.LENGTH_SHORT).show();
-        });
+        Toast.makeText(this, "Нақша илова шуд", Toast.LENGTH_SHORT).show();
+    }
 
-        plans.addView(item);
-        foodInput.setText("");
+    private void savePlans() {
+        JSONArray array = new JSONArray();
 
-        Toast.makeText(this, "Нақша илова шуд",
-                Toast.LENGTH_SHORT).show();
+        for (String plan : plans) {
+            array.put(plan);
+        }
+
+        preferences.edit()
+            .putString("plans", array.toString())
+            .apply();
+    }
+
+    private void loadPlans() {
+        String saved = preferences.getString("plans", "[]");
+
+        try {
+            JSONArray array = new JSONArray(saved);
+
+            for (int i = 0; i < array.length(); i++) {
+                plans.add(array.getString(i));
+            }
+        } catch (Exception e) {
+            plans.clear();
+        }
+    }
+
+    private void showPlans() {
+        list.removeAllViews();
+
+        for (String plan : plans) {
+            TextView item = new TextView(this);
+            item.setText("🍰 " + plan + "     ❌");
+            item.setTextSize(17);
+            item.setTextColor(Color.DKGRAY);
+            item.setPadding(12, 18, 12, 18);
+
+            item.setOnClickListener(v -> {
+                plans.remove(plan);
+                savePlans();
+                showPlans();
+            });
+
+            list.addView(item);
+        }
     }
 }
