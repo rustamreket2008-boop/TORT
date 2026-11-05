@@ -6,15 +6,16 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.view.Gravity;
 import android.widget.*;
+import android.text.Editable;
+import android.text.TextWatcher;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import java.util.ArrayList;
 
 public class CookingPlannerActivity extends Activity {
 
     private ArrayList<String> plans = new ArrayList<>();
     private LinearLayout list;
-    private EditText input;
+    private EditText input, search;
     private Spinner daySpinner;
     private SharedPreferences preferences;
 
@@ -32,7 +33,7 @@ public class CookingPlannerActivity extends Activity {
 
         LinearLayout main = new LinearLayout(this);
         main.setOrientation(LinearLayout.VERTICAL);
-        main.setPadding(20, 25, 20, 20);
+        main.setPadding(18, 20, 18, 15);
         main.setBackgroundColor(Color.rgb(255, 240, 246));
 
         TextView title = new TextView(this);
@@ -43,6 +44,7 @@ public class CookingPlannerActivity extends Activity {
         title.setPadding(5, 15, 5, 20);
 
         daySpinner = new Spinner(this);
+
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
             this,
             android.R.layout.simple_spinner_item,
@@ -59,6 +61,9 @@ public class CookingPlannerActivity extends Activity {
         Button add = new Button(this);
         add.setText("➕ Илова кардани нақша");
 
+        search = new EditText(this);
+        search.setHint("🔍 Ҷустуҷӯи нақша...");
+
         list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
 
@@ -67,14 +72,25 @@ public class CookingPlannerActivity extends Activity {
 
         add.setOnClickListener(v -> addPlan());
 
+        search.addTextChangedListener(new TextWatcher() {
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                showPlans(s.toString());
+            }
+
+            public void afterTextChanged(Editable s) {}
+        });
+
         main.addView(title);
         main.addView(daySpinner);
         main.addView(input);
         main.addView(add);
+        main.addView(search);
         main.addView(scroll);
 
         setContentView(main);
-        showPlans();
+        showPlans("");
     }
 
     private void addPlan() {
@@ -90,7 +106,7 @@ public class CookingPlannerActivity extends Activity {
 
         savePlans();
         input.setText("");
-        showPlans();
+        showPlans(search.getText().toString());
 
         Toast.makeText(this, "Нақша илова шуд", Toast.LENGTH_SHORT).show();
     }
@@ -121,23 +137,38 @@ public class CookingPlannerActivity extends Activity {
         }
     }
 
-    private void showPlans() {
+    private void showPlans(String query) {
         list.removeAllViews();
 
-        for (String plan : plans) {
-            TextView item = new TextView(this);
-            item.setText("🍰 " + plan + "     ❌");
-            item.setTextSize(17);
-            item.setTextColor(Color.DKGRAY);
-            item.setPadding(12, 18, 12, 18);
+        boolean found = false;
 
-            item.setOnClickListener(v -> {
-                plans.remove(plan);
-                savePlans();
-                showPlans();
-            });
+        for (String plan : new ArrayList<>(plans)) {
+            if (plan.toLowerCase().contains(query.toLowerCase())) {
+                found = true;
 
-            list.addView(item);
+                TextView item = new TextView(this);
+                item.setText("🍰 " + plan + "     ❌");
+                item.setTextSize(17);
+                item.setTextColor(Color.DKGRAY);
+                item.setPadding(12, 18, 12, 18);
+
+                item.setOnClickListener(v -> {
+                    plans.remove(plan);
+                    savePlans();
+                    showPlans(search.getText().toString());
+                });
+
+                list.addView(item);
+            }
+        }
+
+        if (!found) {
+            TextView empty = new TextView(this);
+            empty.setText("Нақша ёфт нашуд.");
+            empty.setGravity(Gravity.CENTER);
+            empty.setTextSize(16);
+            empty.setPadding(10, 25, 10, 25);
+            list.addView(empty);
         }
     }
 }
