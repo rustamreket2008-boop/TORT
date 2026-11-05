@@ -20,10 +20,18 @@ public class MainActivity extends Activity {
         main.setPadding(20, 25, 20, 25);
         main.setBackgroundColor(Color.rgb(255, 240, 246));
 
-        TextView logo = new TextView(this);
-        logo.setText("🎂");
-        logo.setTextSize(55);
-        logo.setGravity(Gravity.CENTER);
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(
+            R.drawable.file_0000000070808208be26eecaccbf661d
+        );
+        logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
+        LinearLayout.LayoutParams logoParams =
+            new LinearLayout.LayoutParams(
+                160, 140
+            );
+        logoParams.gravity = Gravity.CENTER;
+        main.addView(logo, logoParams);
 
         TextView title = new TextView(this);
         title.setText("TORT");
@@ -38,7 +46,6 @@ public class MainActivity extends Activity {
         subtitle.setGravity(Gravity.CENTER);
         subtitle.setPadding(5, 5, 5, 20);
 
-        main.addView(logo);
         main.addView(title);
         main.addView(subtitle);
 
@@ -57,7 +64,6 @@ public class MainActivity extends Activity {
 
         ScrollView scroll = new ScrollView(this);
         scroll.addView(main);
-
         setContentView(scroll);
     }
 
@@ -65,15 +71,16 @@ public class MainActivity extends Activity {
         Button button = createButton(text);
 
         button.setOnClickListener(v ->
-                startActivity(new Intent(MainActivity.this, activity)));
+            startActivity(new Intent(MainActivity.this, activity))
+        );
 
         main.addView(button);
     }
 
     private void addButton(
-            String text,
-            Class<?> activity,
-            String category
+        String text,
+        Class<?> activity,
+        String category
     ) {
         Button button = createButton(text);
 
@@ -93,14 +100,14 @@ public class MainActivity extends Activity {
         button.setAllCaps(false);
 
         LinearLayout.LayoutParams params =
-                new LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                );
+            new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            );
 
         params.setMargins(0, 5, 0, 5);
         button.setLayoutParams(params);
 
         return button;
     }
-                                  }
+}
