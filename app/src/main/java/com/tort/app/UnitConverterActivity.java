@@ -8,10 +8,9 @@ import android.widget.*;
 
 public class UnitConverterActivity extends Activity {
 
-    private EditText input;
+    private EditText amount;
+    private Spinner from, to;
     private TextView result;
-    private Spinner fromSpinner;
-    private Spinner toSpinner;
 
     private String[] units = {
         "Грамм", "Килограмм", "Миллилитр", "Литр"
@@ -21,93 +20,105 @@ public class UnitConverterActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(22, 30, 22, 20);
-        layout.setGravity(Gravity.CENTER);
-        layout.setBackgroundColor(Color.rgb(255, 240, 246));
+        LinearLayout main = new LinearLayout(this);
+        main.setOrientation(LinearLayout.VERTICAL);
+        main.setPadding(22, 30, 22, 20);
+        main.setGravity(Gravity.CENTER_HORIZONTAL);
+        main.setBackgroundColor(Color.rgb(255, 240, 246));
 
         TextView title = new TextView(this);
-        title.setText("⚖️ ТАБДИЛДИҲАНДА");
-        title.setTextSize(26);
+        title.setText("⚖️ Табдилдиҳандаи воҳидҳо");
+        title.setTextSize(25);
         title.setTextColor(Color.rgb(220, 70, 130));
         title.setGravity(Gravity.CENTER);
+        title.setPadding(5, 15, 5, 25);
 
-        input = new EditText(this);
-        input.setHint("Миқдорро ворид кун");
-        input.setInputType(8194);
+        amount = new EditText(this);
+        amount.setHint("Миқдорро навис");
+        amount.setInputType(8194);
 
-        fromSpinner = new Spinner(this);
-        toSpinner = new Spinner(this);
+        from = new Spinner(this);
+        to = new Spinner(this);
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this,
-                android.R.layout.simple_spinner_item,
-                units
-        );
-        adapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item
+            this,
+            android.R.layout.simple_spinner_item,
+            units
         );
 
-        fromSpinner.setAdapter(adapter);
-        toSpinner.setAdapter(adapter);
-        toSpinner.setSelection(1);
+        adapter.setDropDownViewResource(
+            android.R.layout.simple_spinner_dropdown_item
+        );
+
+        from.setAdapter(adapter);
+        to.setAdapter(adapter);
 
         Button convert = new Button(this);
-        convert.setText("Ҳисоб кардан");
+        convert.setText("🔄 Ҳисоб кардан");
 
         result = new TextView(this);
-        result.setTextSize(22);
+        result.setTextSize(23);
         result.setTextColor(Color.rgb(220, 70, 130));
         result.setGravity(Gravity.CENTER);
-        result.setPadding(10, 25, 10, 25);
-
-        layout.addView(title);
-        layout.addView(input);
-        layout.addView(fromSpinner);
-        layout.addView(toSpinner);
-        layout.addView(convert);
-        layout.addView(result);
+        result.setPadding(10, 30, 10, 30);
 
         convert.setOnClickListener(v -> calculate());
 
-        setContentView(layout);
+        main.addView(title);
+        main.addView(amount);
+        main.addView(from);
+        main.addView(to);
+        main.addView(convert);
+        main.addView(result);
+
+        setContentView(main);
     }
 
     private void calculate() {
-        String value = input.getText().toString().trim();
+        String value = amount.getText().toString().trim();
 
         if (value.isEmpty()) {
-            input.setError("Миқдорро навис");
+            amount.setError("Миқдорро навис");
             return;
         }
 
         try {
             double number = Double.parseDouble(value);
-            String from = units[fromSpinner.getSelectedItemPosition()];
-            String to = units[toSpinner.getSelectedItemPosition()];
 
-            double answer;
-
-            if (from.equals(to)) {
-                answer = number;
-            } else if (from.equals("Грамм") && to.equals("Килограмм")) {
-                answer = number / 1000;
-            } else if (from.equals("Килограмм") && to.equals("Грамм")) {
-                answer = number * 1000;
-            } else if (from.equals("Миллилитр") && to.equals("Литр")) {
-                answer = number / 1000;
-            } else if (from.equals("Литр") && to.equals("Миллилитр")) {
-                answer = number * 1000;
-            } else {
-                result.setText("Ин ду воҳид табдил намешаванд");
+            if (number < 0) {
+                amount.setError("Рақами мусбат навис");
                 return;
             }
 
-            result.setText("Натиҷа: " + answer + " " + to);
+            int a = from.getSelectedItemPosition();
+            int b = to.getSelectedItemPosition();
+
+            double answer;
+
+            if (a == b) {
+                answer = number;
+            } else if (a == 0 && b == 1) {
+                answer = number / 1000;
+            } else if (a == 1 && b == 0) {
+                answer = number * 1000;
+            } else if (a == 2 && b == 3) {
+                answer = number / 1000;
+            } else if (a == 3 && b == 2) {
+                answer = number * 1000;
+            } else {
+                result.setText(
+                    "Ин ду воҳид мустақим табдил намешаванд."
+                );
+                return;
+            }
+
+            result.setText(
+                "Натиҷа: " + String.format("%.3f", answer)
+                + " " + units[b]
+            );
 
         } catch (NumberFormatException e) {
-            result.setText("Миқдори дурустро ворид кун");
+            amount.setError("Рақами дуруст навис");
         }
     }
 }
