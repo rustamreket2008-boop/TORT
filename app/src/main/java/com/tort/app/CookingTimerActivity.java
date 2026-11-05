@@ -9,18 +9,37 @@ import android.widget.*;
 
 public class CookingTimerActivity extends Activity {
 
-    private EditText minutesInput;
     private TextView timerText;
-    private Button startButton;
-
+    private EditText minutesInput;
     private Handler handler = new Handler();
+
     private long endTime = 0;
+    private long remaining = 0;
     private boolean running = false;
 
-    private Runnable timerRunnable = new Runnable() {
+    private Runnable ticker = new Runnable() {
         @Override
         public void run() {
+            if (!running) return;
+
+            remaining = endTime - System.currentTimeMillis();
+
+            if (remaining <= 0) {
+                remaining = 0;
+                running = false;
+                updateTimer();
+
+                Toast.makeText(
+                    CookingTimerActivity.this,
+                    "⏰ Вақт тамом шуд!",
+                    Toast.LENGTH_LONG
+                ).show();
+
+                return;
+            }
+
             updateTimer();
+            handler.postDelayed(this, 1000);
         }
     };
 
@@ -38,118 +57,129 @@ public class CookingTimerActivity extends Activity {
         title.setText("⏱ Таймери пухтупаз");
         title.setTextSize(27);
         title.setTextColor(Color.rgb(220, 70, 130));
+        title.setGravity(Gravity.CENTER);
 
         minutesInput = new EditText(this);
         minutesInput.setHint("Вақт бо дақиқа");
         minutesInput.setInputType(2);
 
         timerText = new TextView(this);
-        timerText.setText("00:00");
         timerText.setTextSize(48);
         timerText.setTextColor(Color.rgb(220, 70, 130));
         timerText.setGravity(Gravity.CENTER);
+        timerText.setText("00:00");
         timerText.setPadding(10, 30, 10, 30);
 
-        startButton = new Button(this);
-        startButton.setText("▶ Оғоз");
+        Button start = new Button(this);
+        start.setText("▶ Оғоз");
 
-        Button resetButton = new Button(this);
-        resetButton.setText("↻ Аз нав");
+        Button pause = new Button(this);
+        pause.setText("⏸ Таваққуф");
 
-        startButton.setOnClickListener(v -> startTimer());
+        Button reset = new Button(this);
+        reset.setText("↻ Аз нав");
 
-        resetButton.setOnClickListener(v -> resetTimer());
+        start.setOnClickListener(v -> startTimer());
+
+        pause.setOnClickListener(v -> pauseTimer());
+
+        reset.setOnClickListener(v -> resetTimer());
 
         main.addView(title);
         main.addView(minutesInput);
         main.addView(timerText);
-        main.addView(startButton);
-        main.addView(resetButton);
+        main.addView(start);
+        main.addView(pause);
+        main.addView(reset);
 
         setContentView(main);
-
-        updateTimer();
     }
 
     private void startTimer() {
         if (running) return;
 
-        String value = minutesInput.getText().toString().trim();
+        if (remaining <= 0) {
+            String value = minutesInput.getText().toString().trim();
 
-        if (value.isEmpty()) {
-            minutesInput.setError("Дақиқаро навис");
-            return;
-        }
-
-        try {
-            int minutes = Integer.parseInt(value);
-
-            if (minutes < 1 || minutes > 600) {
-                minutesInput.setError("Аз 1 то 600 дақиқа");
+            if (value.isEmpty()) {
+                minutesInput.setError("Дақиқаро навис");
                 return;
             }
 
-            endTime = System.currentTimeMillis() + minutes * 60000L;
-            running = true;
-            startButton.setEnabled(false);
-            updateTimer();
+            try {
+                int minutes = Integer.parseInt(value);
 
-        } catch (NumberFormatException e) {
-            minutesInput.setError("Рақами дурустро навис");
+                if (minutes <= 0 || minutes > 1440) {
+                    minutesInput.setError("Аз 1 то 1440 дақиқа навис");
+                    return;
+                }
+
+                remaining = minutes * 60L * 1000L;
+
+            } catch (NumberFormatException e) {
+                minutesInput.setError("Рақами дуруст навис");
+                return;
+            }
         }
+
+        running = true;
+        endTime = System.currentTimeMillis() + remaining;
+
+        handler.removeCallbacks(ticker);
+        ticker.run();
     }
 
-    private void updateTimer() {
+    private void pauseTimer() {
         if (!running) return;
 
-        long remaining = endTime - System.currentTimeMillis();
-
-        if (remaining <= 0) {
-            running = false;
-            timerText.setText("00:00");
-            startButton.setEnabled(true);
-
-            Toast.makeText(this, "⏰ Вақт тамом шуд!",
-                    Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        long totalSeconds = (remaining + 999) / 1000;
-        long minutes = totalSeconds / 60;
-        long seconds = totalSeconds % 60;
-
-        timerText.setText(String.format(
-                java.util.Locale.getDefault(),
-                "%02d:%02d", minutes, seconds
-        ));
-
-        handler.removeCallbacks(timerRunnable);
-        handler.postDelayed(timerRunnable, 500);
+        remaining = Math.max(0, endTime - System.currentTimeMillis());
+        running = false;
+        handler.removeCallbacks(ticker);
+        updateTimer();
     }
 
     private void resetTimer() {
         running = false;
-        handler.removeCallbacks(timerRunnable);
+        handler.removeCallbacks(ticker);
+        remaining = 0;
         timerText.setText("00:00");
-        startButton.setEnabled(true);
         minutesInput.setText("");
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        updateTimer();
+    private void updateTimer() {
+        long seconds = remaining / 1000;
+
+        long minutes = seconds / 60;
+        long rest = seconds % 60;
+
+        timerText.setText(
+            String.format("%02d:%02d", minutes, rest)
+        );
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        handler.removeCallbacks(timerRunnable);
+
+        if (running) {
+            remaining = Math.max(0, endTime - System.currentTimeMillis());
+            handler.removeCallbacks(ticker);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        if (running) {
+            endTime = System.currentTimeMillis() + remaining;
+            handler.post(ticker);
+        }
     }
 
     @Override
     protected void onDestroy() {
+        handler.removeCallbacks(ticker);
         super.onDestroy();
-        handler.removeCallbacks(timerRunnable);
     }
-}
+    }
