@@ -2,130 +2,154 @@ package com.tort.app;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.Handler;
 import android.graphics.Color;
 import android.view.Gravity;
 import android.widget.*;
-import android.os.CountDownTimer;
 
 public class CookingTimerActivity extends Activity {
 
-    private TextView timerText;
     private EditText minutesInput;
-    private CountDownTimer timer;
-    private long remainingTime = 0;
+    private TextView timerText;
+    private Button startButton;
+
+    private Handler handler = new Handler();
+    private long endTime = 0;
+    private boolean running = false;
+
+    private Runnable timerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            updateTimer();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setGravity(Gravity.CENTER);
-        layout.setPadding(25, 30, 25, 30);
-        layout.setBackgroundColor(Color.rgb(255, 240, 246));
+        LinearLayout main = new LinearLayout(this);
+        main.setOrientation(LinearLayout.VERTICAL);
+        main.setGravity(Gravity.CENTER);
+        main.setPadding(25, 30, 25, 30);
+        main.setBackgroundColor(Color.rgb(255, 240, 246));
 
         TextView title = new TextView(this);
-        title.setText("⏱ ТАЙМЕРИ ПУХТУПАЗӢ");
-        title.setTextSize(25);
+        title.setText("⏱ Таймери пухтупаз");
+        title.setTextSize(27);
         title.setTextColor(Color.rgb(220, 70, 130));
-        title.setGravity(Gravity.CENTER);
-
-        timerText = new TextView(this);
-        timerText.setText("00:00");
-        timerText.setTextSize(55);
-        timerText.setTextColor(Color.rgb(220, 70, 130));
-        timerText.setGravity(Gravity.CENTER);
-        timerText.setPadding(10, 35, 10, 35);
 
         minutesInput = new EditText(this);
         minutesInput.setHint("Вақт бо дақиқа");
         minutesInput.setInputType(2);
 
-        Button startButton = new Button(this);
+        timerText = new TextView(this);
+        timerText.setText("00:00");
+        timerText.setTextSize(48);
+        timerText.setTextColor(Color.rgb(220, 70, 130));
+        timerText.setGravity(Gravity.CENTER);
+        timerText.setPadding(10, 30, 10, 30);
+
+        startButton = new Button(this);
         startButton.setText("▶ Оғоз");
 
         Button resetButton = new Button(this);
         resetButton.setText("↻ Аз нав");
 
-        layout.addView(title);
-        layout.addView(timerText);
-        layout.addView(minutesInput);
-        layout.addView(startButton);
-        layout.addView(resetButton);
-
         startButton.setOnClickListener(v -> startTimer());
 
-        resetButton.setOnClickListener(v -> {
-            if (timer != null) {
-                timer.cancel();
-            }
-            remainingTime = 0;
-            timerText.setText("00:00");
-            minutesInput.setText("");
-        });
+        resetButton.setOnClickListener(v -> resetTimer());
 
-        setContentView(layout);
+        main.addView(title);
+        main.addView(minutesInput);
+        main.addView(timerText);
+        main.addView(startButton);
+        main.addView(resetButton);
+
+        setContentView(main);
+
+        updateTimer();
     }
 
     private void startTimer() {
-        if (timer != null) {
-            timer.cancel();
-        }
+        if (running) return;
 
         String value = minutesInput.getText().toString().trim();
 
         if (value.isEmpty()) {
-            Toast.makeText(this, "Вақтро ворид кун",
-                    Toast.LENGTH_SHORT).show();
+            minutesInput.setError("Дақиқаро навис");
             return;
         }
-
-        int minutes;
 
         try {
-            minutes = Integer.parseInt(value);
+            int minutes = Integer.parseInt(value);
+
+            if (minutes < 1 || minutes > 600) {
+                minutesInput.setError("Аз 1 то 600 дақиқа");
+                return;
+            }
+
+            endTime = System.currentTimeMillis() + minutes * 60000L;
+            running = true;
+            startButton.setEnabled(false);
+            updateTimer();
+
         } catch (NumberFormatException e) {
+            minutesInput.setError("Рақами дурустро навис");
+        }
+    }
+
+    private void updateTimer() {
+        if (!running) return;
+
+        long remaining = endTime - System.currentTimeMillis();
+
+        if (remaining <= 0) {
+            running = false;
+            timerText.setText("00:00");
+            startButton.setEnabled(true);
+
+            Toast.makeText(this, "⏰ Вақт тамом шуд!",
+                    Toast.LENGTH_LONG).show();
             return;
         }
 
-        if (minutes < 1 || minutes > 600) {
-            Toast.makeText(this, "Аз 1 то 600 дақиқа ворид кун",
-                    Toast.LENGTH_SHORT).show();
-            return;
-        }
+        long totalSeconds = (remaining + 999) / 1000;
+        long minutes = totalSeconds / 60;
+        long seconds = totalSeconds % 60;
 
-        remainingTime = minutes * 60L * 1000L;
+        timerText.setText(String.format(
+                java.util.Locale.getDefault(),
+                "%02d:%02d", minutes, seconds
+        ));
 
-        timer = new CountDownTimer(remainingTime, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                remainingTime = millisUntilFinished;
-                long seconds = millisUntilFinished / 1000;
-                long min = seconds / 60;
-                long sec = seconds % 60;
+        handler.removeCallbacks(timerRunnable);
+        handler.postDelayed(timerRunnable, 500);
+    }
 
-                timerText.setText(String.format(
-                        java.util.Locale.US, "%02d:%02d", min, sec));
-            }
+    private void resetTimer() {
+        running = false;
+        handler.removeCallbacks(timerRunnable);
+        timerText.setText("00:00");
+        startButton.setEnabled(true);
+        minutesInput.setText("");
+    }
 
-            @Override
-            public void onFinish() {
-                remainingTime = 0;
-                timerText.setText("00:00");
-                Toast.makeText(CookingTimerActivity.this,
-                        "Вақти пухтупаз тамом шуд!",
-                        Toast.LENGTH_LONG).show();
-            }
-        };
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateTimer();
+    }
 
-        timer.start();
+    @Override
+    protected void onPause() {
+        super.onPause();
+        handler.removeCallbacks(timerRunnable);
     }
 
     @Override
     protected void onDestroy() {
-        if (timer != null) {
-            timer.cancel();
-        }
         super.onDestroy();
+        handler.removeCallbacks(timerRunnable);
     }
 }
