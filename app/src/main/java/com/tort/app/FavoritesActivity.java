@@ -2,45 +2,103 @@ package com.tort.app;
 
 import android.app.Activity;
 import android.os.Bundle;
-import android.widget.*;
+import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.view.Gravity;
-import android.content.Intent;
+import android.widget.*;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class FavoritesActivity extends Activity {
+
+    private ArrayList<String> favorites;
+    private LinearLayout list;
+    private SharedPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        layout.setPadding(18, 20, 18, 20);
-        layout.setBackgroundColor(Colors.LIGHT_PINK);
+        preferences = getSharedPreferences("TORT_FAVORITES", MODE_PRIVATE);
+
+        Set<String> saved = preferences.getStringSet(
+            "favorites", new HashSet<String>()
+        );
+
+        favorites = new ArrayList<>(saved);
+
+        LinearLayout main = new LinearLayout(this);
+        main.setOrientation(LinearLayout.VERTICAL);
+        main.setPadding(20, 25, 20, 20);
+        main.setBackgroundColor(Color.rgb(255, 240, 246));
 
         TextView title = new TextView(this);
-        title.setText("❤️ Дӯстдоштаҳои ман");
-        title.setTextSize(25);
-        title.setTextColor(Colors.PINK);
+        title.setText("❤️ Дӯстдоштаҳо");
+        title.setTextSize(27);
+        title.setTextColor(Color.rgb(220, 70, 130));
         title.setGravity(Gravity.CENTER);
-        layout.addView(title);
+        title.setPadding(5, 20, 5, 20);
 
-        ListView list = new ListView(this);
+        list = new LinearLayout(this);
+        list.setOrientation(LinearLayout.VERTICAL);
 
-        ArrayList<String> cakes =
-            new ArrayList<>(Favorites.getAll(this));
+        ScrollView scroll = new ScrollView(this);
+        scroll.addView(list);
 
-        list.setAdapter(new RecipeAdapter(this, cakes));
+        Button clear = new Button(this);
+        clear.setText("🗑 Пок кардани ҳама");
 
-        list.setOnItemClickListener((parent, view, position, id) -> {
-            Intent intent = new Intent(this, DetailActivity.class);
-            intent.putExtra("cake", cakes.get(position));
-            startActivity(intent);
+        clear.setOnClickListener(v -> {
+            favorites.clear();
+            saveFavorites();
+            showFavorites();
         });
 
-        layout.addView(list,
-            new LinearLayout.LayoutParams(-1, 0, 1));
+        main.addView(title);
+        main.addView(clear);
+        main.addView(scroll);
 
-        setContentView(layout);
+        setContentView(main);
+
+        showFavorites();
+    }
+
+    private void saveFavorites() {
+        Set<String> saved = new HashSet<>(favorites);
+
+        preferences.edit()
+            .putStringSet("favorites", saved)
+            .apply();
+    }
+
+    private void showFavorites() {
+        list.removeAllViews();
+
+        if (favorites.isEmpty()) {
+            TextView empty = new TextView(this);
+            empty.setText("Ҳоло ягон торт илова нашудааст ❤️");
+            empty.setTextSize(17);
+            empty.setGravity(Gravity.CENTER);
+            empty.setPadding(10, 30, 10, 30);
+            list.addView(empty);
+            return;
+        }
+
+        for (String name : favorites) {
+            TextView item = new TextView(this);
+            item.setText("❤️ " + name + "     ❌");
+            item.setTextSize(18);
+            item.setTextColor(Color.DKGRAY);
+            item.setPadding(12, 18, 12, 18);
+
+            item.setOnClickListener(v -> {
+                favorites.remove(name);
+                saveFavorites();
+                showFavorites();
+            });
+
+            list.addView(item);
+        }
     }
 }
